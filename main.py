@@ -1,16 +1,43 @@
-# This is a sample Python script.
+import logging
+import os
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+from dotenv import load_dotenv
+
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
+
+# Enable logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+
+load_dotenv()  # take environment variables from .env.
+
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(f'Start {update.effective_user.first_name}')
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(f'Hello {update.effective_user.first_name}')
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    message = update.message.text.lower()
+
+    if 'привіт' in message:
+        reply_text = f'Привіт {update.effective_user.first_name}!'
+    else:
+        reply_text = 'Я тебе не розумію.'
+
+    await update.message.reply_text(reply_text)
+
+app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("hello", hello))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+
+app.run_polling()
